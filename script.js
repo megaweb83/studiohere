@@ -777,6 +777,40 @@
     }
   }
 
+  /* ---------------------------------------------------- 10b. hero sound toggle */
+  var soundToggle = $('#soundToggle');
+  if (soundToggle) {
+    var soundLabel = $('.sound-label', soundToggle);
+    var setSoundState = function (on) {
+      if (heroVideo) {
+        heroVideo.muted = !on;
+        if (on) { try { heroVideo.volume = 0.85; } catch (e) {} }
+        if (on && heroVideo.paused) {
+          var pr = heroVideo.play();
+          if (pr && typeof pr.catch === 'function') pr.catch(function () {});
+        }
+      }
+      if (soundToggle.classList) soundToggle.classList.toggle('is-on', on);
+      soundToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var lbl = on ? '히어로 영상 소리 끄기' : '히어로 영상 소리 켜기';
+      soundToggle.setAttribute('aria-label', lbl);
+      soundToggle.setAttribute('title', lbl);
+      if (soundLabel) soundLabel.textContent = on ? 'ON' : 'SOUND';
+    };
+    soundToggle.addEventListener('click', function () {
+      /* muted 상태면 → 켜기, 소리 켜져 있으면 → 끄기 */
+      setSoundState(!heroVideo ? false : heroVideo.muted);
+    });
+    /* 브라우저·OS가 임의로 음소거를 바꿈 경우(미디어 세션 등) 버튼 상태 동기화 */
+    if (heroVideo) {
+      heroVideo.addEventListener('volumechange', function () {
+        var isOn = soundToggle.classList.contains('is-on');
+        if (heroVideo.muted === isOn) setSoundState(!heroVideo.muted);
+      });
+      heroVideo.addEventListener('error', function () { soundToggle.style.display = 'none'; });
+    }
+  }
+
   /* ---------------------------------------------------- etc */
   var year = new Date().getFullYear();
   var copy = $('.footer-bottom p');
