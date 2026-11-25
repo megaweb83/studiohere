@@ -884,9 +884,10 @@ a.ci-val:hover{color:var(--accent-2)}
 
   .hero{padding-top:calc(var(--nav-h) + 26px)}
   .hero-media{top:calc(-1 * (var(--nav-h) + 26px));bottom:-8px}
-  .hero-media.is-ready .hero-bg-video{opacity:.52}
+  .hero-media.is-ready .hero-bg-video{opacity:.44}
   .hero-veil{
     background:
+      radial-gradient(88% 52% at 8% 20%,rgba(6,6,8,.66),rgba(6,6,8,0) 78%),
       radial-gradient(70% 40% at 60% 74%,rgba(6,6,8,.5),rgba(6,6,8,0) 78%),
       radial-gradient(90% 46% at 68% 10%,rgba(255,214,10,.12),transparent 70%),
       linear-gradient(180deg,rgba(6,6,8,.95) 0%,rgba(6,6,8,.77) 24%,rgba(6,6,8,.80) 58%,rgba(6,6,8,.95) 87%,var(--ink) 100%),
