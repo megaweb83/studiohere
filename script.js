@@ -688,7 +688,7 @@
       var a = document.createElement('a');
       a.href = buildMailto(data);
       a.textContent = '이 내용으로 메일 보내기';
-      a.style.cssText = 'color:var(--accent-2);text-decoration:underline;text-underline-offset:3px';
+      a.style.cssText = 'color:var(--accent-2);text-decoration:underline;text-underline-offset:3px;display:inline-block;white-space:nowrap';
       status.appendChild(a);
       status.appendChild(document.createTextNode(' 또는 djseo2707@gmail.com 로 보내주세요.'));
     }
