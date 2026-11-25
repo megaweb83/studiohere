@@ -777,46 +777,69 @@
     }
   }
 
-  /* ---------------------------------------------------- 10b. hero sound toggle */
+  /* ---------------------------------------------------- 10b. hero showreel + sound toggle */
+  var showreel = $('#showreelVideo');
   var soundToggle = $('#soundToggle');
-  if (soundToggle) {
-    var soundLabel = $('.sound-label', soundToggle);
-    var setSoundState = function (on) {
-      if (heroVideo) {
-        heroVideo.muted = !on;
-        if (on) { try { heroVideo.volume = 0.85; } catch (e) {} }
-        if (on && heroVideo.paused) {
-          var pr = heroVideo.play();
-          if (pr && typeof pr.catch === 'function') pr.catch(function () {});
-        }
-      }
-      if (soundToggle.classList) soundToggle.classList.toggle('is-on', on);
-      soundToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
-      var lbl = on ? '히어로 영상 소리 끄기' : '히어로 영상 소리 켜기';
-      soundToggle.setAttribute('aria-label', lbl);
-      soundToggle.setAttribute('title', lbl);
-      if (soundLabel) soundLabel.textContent = on ? 'ON' : 'SOUND';
-    };
-    soundToggle.addEventListener('click', function () {
-      /* muted 상태면 → 켜기, 소리 켜져 있으면 → 끄기 */
-      setSoundState(!heroVideo ? false : heroVideo.muted);
-    });
-    /* 브라우저·OS가 임의로 음소거를 바꿈 경우(미디어 세션 등) 버튼 상태 동기화 */
-    if (heroVideo) {
-      heroVideo.addEventListener('volumechange', function () {
-        var isOn = soundToggle.classList.contains('is-on');
-        if (heroVideo.muted === isOn) setSoundState(!heroVideo.muted);
-      });
-      heroVideo.addEventListener('error', function () { soundToggle.style.display = 'none'; });
+  var soundLabel = soundToggle ? $('.sound-label', soundToggle) : null;
+
+  var playShowreel = function () {
+    if (!showreel || document.hidden) return;
+    var p = showreel.play();
+    if (p && typeof p.catch === 'function') p.catch(function () { /* 자동재생 차단 시 포스터 유지 */ });
+  };
+
+  var syncSoundBtn = function (on) {
+    if (!soundToggle) return;
+    if (soundToggle.classList) soundToggle.classList.toggle('is-on', on);
+    soundToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var lbl = on ? '쇼릴 영상 소리 끄기' : '쇼릴 영상 소리 켜기';
+    soundToggle.setAttribute('aria-label', lbl);
+    soundToggle.setAttribute('title', lbl);
+    if (soundLabel) soundLabel.textContent = on ? 'ON' : 'SOUND';
+  };
+
+  var setSoundState = function (on) {
+    if (!showreel) return;
+    showreel.muted = !on;
+    if (on) {
+      try { showreel.volume = 0.85; } catch (e) {}
+      if (showreel.paused) playShowreel();
     }
-    /* 모바일 고정 버튼: 히어로가 화면 밖으로 나가면 사라지게 */
-    var heroSection = $('.hero');
-    if (heroSection && 'IntersectionObserver' in window) {
+    /* 배경 영상은 언제나 무음 고정 */
+    if (heroVideo) heroVideo.muted = true;
+    syncSoundBtn(on);
+  };
+
+  if (showreel) {
+    if (heroVideo) heroVideo.muted = true;
+    playShowreel();
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { try { showreel.pause(); } catch (e) {} } else playShowreel();
+    });
+    /* 카드가 화면을 벗어나면 재생·소리 모두 정지 (돌아왔을 때 다시 재생) */
+    if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
-          if (soundToggle.classList) soundToggle.classList.toggle('is-away', !entry.isIntersecting);
+          if (entry.isIntersecting) { playShowreel(); }
+          else {
+            if (!showreel.muted) setSoundState(false);
+            if (!showreel.paused) { try { showreel.pause(); } catch (e) {} }
+          }
         });
-      }, { threshold: 0 }).observe(heroSection);
+      }, { threshold: 0.15 }).observe(showreel);
+    }
+
+    if (soundToggle) {
+      soundToggle.addEventListener('click', function () {
+        /* 지금 음소거 상태면 → 켜기, 켜져 있으면 → 끄기 */
+        setSoundState(showreel.muted);
+      });
+      /* 브라우저·OS가 임의로 음소거를 바꾼 경우(미디어 세션 등) 버튼 상태 동기화 */
+      showreel.addEventListener('volumechange', function () {
+        var isOn = soundToggle.classList && soundToggle.classList.contains('is-on');
+        if (showreel.muted === isOn) setSoundState(!showreel.muted);
+      });
+      showreel.addEventListener('error', function () { soundToggle.style.display = 'none'; });
     }
   }
 
