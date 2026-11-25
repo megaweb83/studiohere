@@ -809,6 +809,15 @@
       });
       heroVideo.addEventListener('error', function () { soundToggle.style.display = 'none'; });
     }
+    /* 모바일 고정 버튼: 히어로가 화면 밖으로 나가면 사라지게 */
+    var heroSection = $('.hero');
+    if (heroSection && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (soundToggle.classList) soundToggle.classList.toggle('is-away', !entry.isIntersecting);
+        });
+      }, { threshold: 0 }).observe(heroSection);
+    }
   }
 
   /* ---------------------------------------------------- etc */

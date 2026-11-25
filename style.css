@@ -446,8 +446,9 @@ em{font-style:normal}
   font-family:var(--sans);font-size:9px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;line-height:1;
   white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;
   opacity:0;animation:fadeUp .9s var(--ease) 1.05s forwards;
-  transition:color .3s var(--ease),border-color .3s var(--ease),background .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
+  transition:color .3s var(--ease),border-color .3s var(--ease),background .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease),opacity .35s var(--ease);
 }
+.sound-toggle::after{content:"";position:absolute;inset:-7px;border-radius:999px}
 .sound-toggle:hover{color:#fff;border-color:rgba(255,255,255,.34);transform:translateY(-1px)}
 .sound-toggle:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px}
 .sound-ico{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;flex:none}
@@ -923,8 +924,13 @@ a.ci-val:hover{color:var(--accent-2)}
       linear-gradient(180deg,rgba(6,6,8,.95) 0%,rgba(6,6,8,.77) 24%,rgba(6,6,8,.80) 58%,rgba(6,6,8,.95) 87%,var(--ink) 100%),
       linear-gradient(90deg,rgba(6,6,8,.88),rgba(6,6,8,.6));
   }
-  .hero-wrap{grid-template-columns:1fr;min-height:0;gap:30px;padding-bottom:58px}
-  .sound-toggle{bottom:14px;height:31px}
+  .hero-wrap{grid-template-columns:1fr;min-height:0;gap:30px;padding-bottom:34px}
+  /* 모바일: 화면 우측 하단에 고정(히어로가 화면을 벗어나면 사라짐) */
+  .sound-toggle{
+    position:fixed;right:var(--pad);bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    height:34px;z-index:250;opacity:1;animation:none;
+  }
+  .sound-toggle.is-away{opacity:0;transform:translateY(8px);pointer-events:none}
   .hero-title{font-size:clamp(34px,8.2vw,54px);margin:20px 0 18px}
   .hero-sub{font-size:13.5px;max-width:none}
   .hero-actions{gap:10px;margin-top:26px}
