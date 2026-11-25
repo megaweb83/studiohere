@@ -777,15 +777,33 @@
     }
   }
 
-  /* ---------------------------------------------------- 10b. hero showreel + sound toggle */
+  /* ---------------------------------------------------- 10b. hero showreel + play/pause & sound toggle */
   var showreel = $('#showreelVideo');
   var soundToggle = $('#soundToggle');
   var soundLabel = soundToggle ? $('.sound-label', soundToggle) : null;
+  var playToggle = $('#playToggle');
+  var playLabel = playToggle ? $('.play-label', playToggle) : null;
+  var userPaused = false;   /* 사용자가 직접 일시정지한 상태 — 스크롤 복귀 시 임의 재생 금지 */
+
+  var syncPlayBtn = function (paused) {
+    if (!playToggle) return;
+    if (playToggle.classList) playToggle.classList.toggle('is-paused', paused);
+    playToggle.setAttribute('aria-pressed', paused ? 'true' : 'false');
+    var lbl = paused ? '쇼릴 영상 재생' : '쇼릴 영상 일시정지';
+    playToggle.setAttribute('aria-label', lbl);
+    playToggle.setAttribute('title', lbl);
+    if (playLabel) playLabel.textContent = paused ? 'PLAY' : 'PAUSE';
+  };
 
   var playShowreel = function () {
-    if (!showreel || document.hidden) return;
+    if (!showreel || document.hidden || userPaused) return;
     var p = showreel.play();
-    if (p && typeof p.catch === 'function') p.catch(function () { /* 자동재생 차단 시 포스터 유지 */ });
+    if (p && typeof p.then === 'function') {
+      p.then(function () { syncPlayBtn(false); })
+       .catch(function () { /* 자동재생 차단 시 포스터 유지 */ });
+    } else {
+      syncPlayBtn(showreel.paused);
+    }
   };
 
   var syncSoundBtn = function (on) {
@@ -813,10 +831,11 @@
   if (showreel) {
     if (heroVideo) heroVideo.muted = true;
     playShowreel();
+    syncPlayBtn(showreel.paused);
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) { try { showreel.pause(); } catch (e) {} } else playShowreel();
     });
-    /* 카드가 화면을 벗어나면 재생·소리 모두 정지 (돌아왔을 때 다시 재생) */
+    /* 카드가 화면을 벗어나면 재생·소리 모두 정지 (돌아왔을 때 다시 재생, 단 사용자가 멈춘 경우 유지) */
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
@@ -827,6 +846,28 @@
           }
         });
       }, { threshold: 0.15 }).observe(showreel);
+    }
+
+    /* 재생/일시정지 토글 */
+    if (playToggle) {
+      playToggle.addEventListener('click', function () {
+        if (showreel.paused) {
+          userPaused = false;
+          playShowreel();
+          if (!showreel.paused) syncPlayBtn(false);
+        } else {
+          userPaused = true;
+          try { showreel.pause(); } catch (e) {}
+          syncPlayBtn(true);
+        }
+      });
+      /* 브라우저·OS가 상태를 바꾸는 경우(탭 전환·미디어 세션 등) 버튼 라벨 동기화 */
+      showreel.addEventListener('play', function () { if (!userPaused) syncPlayBtn(false); });
+      showreel.addEventListener('pause', function () { syncPlayBtn(true); });
+      showreel.addEventListener('error', function () {
+        var box = playToggle.parentNode;
+        if (box && box.classList.contains('showreel-controls')) { try { box.style.display = 'none'; } catch (e) {} }
+      });
     }
 
     if (soundToggle) {

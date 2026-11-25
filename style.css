@@ -447,9 +447,13 @@ em{font-style:normal}
 .hero-showreel:hover{border-color:rgba(255,214,10,.32);box-shadow:0 0 0 1px rgba(255,214,10,.26),0 34px 70px -34px rgba(0,0,0,.95),0 10px 26px -20px rgba(0,0,0,.9)}
 .hero-showreel-video{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:var(--ink)}
 
-/* --- sound toggle (쇼릴 카드 안 우측 하단, 다크 글래스) --- */
-.sound-toggle{
+/* --- showreel controls (쇼릴 카드 안 우측 하단 · 다크 글래스 · 일시정지/재생 + 사운드) --- */
+.showreel-controls{
   position:absolute;right:10px;bottom:10px;z-index:3;
+  display:flex;align-items:center;gap:8px;
+}
+.media-toggle{
+  position:relative;
   display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px 0 9px;border-radius:999px;
   border:1px solid rgba(255,255,255,.2);background:rgba(8,8,10,.62);
   -webkit-backdrop-filter:blur(10px) saturate(1.15);backdrop-filter:blur(10px) saturate(1.15);
@@ -459,13 +463,23 @@ em{font-style:normal}
   white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;
   transition:color .3s var(--ease),border-color .3s var(--ease),background .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
 }
-.sound-toggle::after{content:"";position:absolute;inset:-8px;border-radius:999px}
-.sound-toggle:hover{color:#fff;border-color:rgba(255,255,255,.36);background:rgba(8,8,10,.74)}
-.sound-toggle:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px}
-.sound-ico{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none}
-.sound-ico svg{display:block}
-.sound-ico .ico-on{display:none}
-.sound-label{display:block;transform:translateY(.5px)}
+.media-toggle::after{content:"";position:absolute;inset:-8px -3px;border-radius:999px}
+.media-toggle:hover{color:#fff;border-color:rgba(255,255,255,.36);background:rgba(8,8,10,.74)}
+.media-toggle:active{transform:scale(.97)}
+.media-toggle:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px}
+.media-ico{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none}
+.media-ico svg{display:block}
+.media-label{display:block;transform:translateY(.5px)}
+
+/* 재생/일시정지 토글 — 상태 라벨·아이콘 교체 */
+.media-toggle .ico-play{display:none}
+.media-toggle.is-paused .ico-pause{display:none}
+.media-toggle.is-paused .ico-play{display:block}
+.play-toggle.is-paused{color:#fff;border-color:rgba(255,255,255,.34);background:rgba(8,8,10,.78)}
+.play-toggle.is-paused:hover{color:var(--accent-2);border-color:rgba(255,214,10,.5)}
+
+/* 사운드 토글 */
+.sound-toggle .ico-on{display:none}
 .sound-bars{display:none;align-items:flex-end;gap:2px;height:9px;margin-left:-1px}
 .sound-bars i{display:block;width:2px;height:100%;border-radius:1px;background:currentColor;transform-origin:bottom;animation:eq 1.05s var(--ease-soft) infinite}
 .sound-bars i:nth-child(2){height:62%;animation-delay:.16s}
@@ -1004,6 +1018,8 @@ a.ci-val:hover{color:var(--accent-2)}
 
 @media (max-width:560px){
   .hero-showreel{max-width:none}
+  .showreel-controls{right:8px;bottom:8px;gap:6px}
+  .media-toggle{height:28px;padding:0 10px 0 8px;font-size:8px;letter-spacing:.16em}
   .hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
   .hero-actions .btn{padding:0 10px;font-size:12.5px;height:46px}
   .hero-actions .btn-text{grid-column:1 / -1;height:30px;justify-self:start;margin-top:0;font-size:12px}
