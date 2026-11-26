@@ -684,21 +684,10 @@
     status.classList.toggle('is-error', !!isError);
   }
 
-  /* FormSubmit AJAX 전송 (JS 없이도 <form action> 직접 POST 로 동작) */
-  var FORM_ENDPOINT = 'https://formsubmit.co/ajax/djseo2707@gmail.com';
-
-  function setStatusLink(prefix, label, href, suffix) {
-    if (!status) return;
-    status.classList.add('is-error');
-    status.textContent = prefix;
-    var a = document.createElement('a');
-    a.href = href;
-    a.textContent = label;
-    a.style.cssText = 'color:var(--accent-2);text-decoration:underline;text-underline-offset:3px;display:inline-block;white-space:nowrap';
-    status.appendChild(a);
-    if (suffix) status.appendChild(document.createTextNode(suffix));
-  }
-
+  /* 브라우저 표준 Form POST 직접 제출 (AJAX fetch 미사용)
+     — FormSubmit 첫 Activate 전 상태나 Cloudflare 챌린지가 AJAX 요청을 막기 때문에,
+       유효성 통과 후에는 <form action="https://formsubmit.co/djseo2707@gmail.com" method="POST">
+       네이티브 제출을 그대로 진행시킨다. (JS 없이도 동일하게 동작) */
   if (form && submitBtn) {
     var submitLabel = submitBtn.querySelector('span');
     var btnIdle = submitLabel ? submitLabel.textContent : '';
@@ -710,54 +699,36 @@
     }
 
     form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (submitBtn.disabled) return; /* 중복 클릭 방지 */
+      if (submitBtn.disabled) { e.preventDefault(); return; } /* 중복 제출 방지 */
 
+      /* 1) 필수 입력(name·email·message·개인정보 동의) 검사 — 실패하면 기본 검증 안내 후 중단 */
       if (!form.checkValidity()) {
+        e.preventDefault();
         form.reportValidity();
         setStatus('필수 항목을 확인해 주세요.', true);
         return;
       }
 
-      var payload = {};
-      new FormData(form).forEach(function (v, k) {
-        if (k === '_honey') return;
-        payload[k] = typeof v === 'string' ? v : v.name;
-      });
-      if (payload.email) payload._replyto = payload.email;
-
+      /* 2) 통과 → 회신 주소(_replyto)만 채우고, 제출은 막지 않는다(네이티브 POST) */
       setStatus('');
+      var emailField = form.querySelector('input[name="email"]');
+      var replyTo = form.querySelector('input[name="_replyto"]');
+      if (emailField && emailField.value) {
+        if (!replyTo) {
+          replyTo = document.createElement('input');
+          replyTo.type = 'hidden';
+          replyTo.name = '_replyto';
+          form.appendChild(replyTo);
+        }
+        replyTo.value = emailField.value;
+      }
+
       setBusy(true);
 
-      /* URLSearchParams → application/x-www-form-urlencoded (CORS preflight 없이 전송) */
-      var body = new URLSearchParams();
-      Object.keys(payload).forEach(function (k) {
-        if (payload[k]) body.append(k, payload[k]);
-      });
-
-      fetch(FORM_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Accept': 'application/json' },
-        body: body
-      })
-        .then(function (res) {
-          return res.json().catch(function () { return {}; }).then(function (json) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return json;
-          });
-        })
-        .then(function (json) {
-          if (json && String(json.success) === 'false') throw new Error('rejected');
-          form.reset();
-          setStatus('문의가 접수되었습니다. 영업일 24시간 안에 회신드리겠습니다.');
-          if (status && status.scrollIntoView) status.scrollIntoView({ block: 'nearest' });
-        })
-        .catch(function () {
-          setStatusLink('전송에 실패했습니다. 잠시 후 다시 시도하시거나 ', 'djseo2707@gmail.com', 'mailto:djseo2707@gmail.com', ' 로 보내주세요.');
-        })
-        .finally(function () {
-          setBusy(false);
-        });
+      /* 페이지 이동이 취소된 경우에도 버튼이 잠긴 채 남지 않도록 안전 해제 */
+      window.setTimeout(function () {
+        if (document.body && document.body.contains(submitBtn)) setBusy(false);
+      }, 15000);
     });
   }
 
