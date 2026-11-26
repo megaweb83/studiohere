@@ -445,24 +445,30 @@ em{font-style:normal}
   transition:border-color .45s var(--ease),box-shadow .45s var(--ease);
 }
 .hero-showreel:hover{border-color:rgba(255,214,10,.32);box-shadow:0 0 0 1px rgba(255,214,10,.26),0 34px 70px -34px rgba(0,0,0,.95),0 10px 26px -20px rgba(0,0,0,.9)}
-.hero-showreel-video{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:var(--ink)}
+.hero-showreel-video{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:var(--ink);pointer-events:none}
 
 /* --- showreel controls (쇼릴 카드 안 우측 하단 · 다크 글래스 · 일시정지/재생 + 사운드) --- */
+/* 래퍼는 클릭을 통과시키고 버튼만 이벤트를 받는다(영상·스크림이 터치를 가로채지 않도록) */
 .showreel-controls{
-  position:absolute;right:10px;bottom:10px;z-index:3;
+  position:absolute;right:10px;bottom:10px;z-index:9;
   display:flex;align-items:center;gap:8px;
+  pointer-events:none;
 }
 .media-toggle{
-  position:relative;
-  display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px 0 9px;border-radius:999px;
+  position:relative;z-index:1;
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:36px;height:36px;padding:0 13px 0 10px;border-radius:999px;
   border:1px solid rgba(255,255,255,.2);background:rgba(8,8,10,.62);
   -webkit-backdrop-filter:blur(10px) saturate(1.15);backdrop-filter:blur(10px) saturate(1.15);
   box-shadow:0 10px 24px -16px rgba(0,0,0,.95);
   color:rgba(255,255,255,.74);
   font-family:var(--sans);font-size:8.5px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;line-height:1;
   white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  pointer-events:auto;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none;
   transition:color .3s var(--ease),border-color .3s var(--ease),background .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
 }
+/* 터치 영역을 세로로 더 넓게(약 52px) — 모바일 오탭 방지 */
 .media-toggle::after{content:"";position:absolute;inset:-8px -3px;border-radius:999px}
 .media-toggle:hover{color:#fff;border-color:rgba(255,255,255,.36);background:rgba(8,8,10,.74)}
 .media-toggle:active{transform:scale(.97)}
@@ -1018,8 +1024,8 @@ a.ci-val:hover{color:var(--accent-2)}
 
 @media (max-width:560px){
   .hero-showreel{max-width:none}
-  .showreel-controls{right:8px;bottom:8px;gap:6px}
-  .media-toggle{height:28px;padding:0 10px 0 8px;font-size:8px;letter-spacing:.16em}
+  .showreel-controls{right:8px;bottom:8px;gap:8px}
+  .media-toggle{min-height:36px;height:36px;padding:0 11px 0 9px;font-size:8px;letter-spacing:.16em}
   .hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
   .hero-actions .btn{padding:0 10px;font-size:12.5px;height:46px}
   .hero-actions .btn-text{grid-column:1 / -1;height:30px;justify-self:start;margin-top:0;font-size:12px}

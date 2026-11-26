@@ -13,6 +13,28 @@
   var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)); };
 
+  /* ---------------------------------------------------- 0. S | H 마크 — 글자 사이 정중앙에 노란 바 */
+  /* 폰트(Instrument Serif) 실제 렌더 폭에 맞춰 바 위치를 계산한다. 폴백 폰트·모바일에서도 중앙 유지 */
+  var centerMarkBars = function () {
+    $$('svg.mark').forEach(function (svg) {
+      var texts = svg.querySelectorAll('text');
+      var bar = svg.querySelector('.bar');
+      if (texts.length < 2 || !bar) return;
+      try {
+        var s = texts[0].getBBox();
+        var h = texts[1].getBBox();
+        var bw = parseFloat(bar.getAttribute('width')) || bar.getBBox().width;
+        var mid = ((s.x + s.width) + h.x) / 2;
+        bar.setAttribute('x', (mid - bw / 2).toFixed(2));
+      } catch (e) { /* getBBox 미지원 시 정적 좌표 유지 */ }
+    });
+  };
+  centerMarkBars();
+  if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+    document.fonts.ready.then(centerMarkBars).catch(function () {});
+  }
+  window.addEventListener('load', centerMarkBars);
+
   /* ---------------------------------------------------- 1. splash */
   var splash = $('#splash');
   function hideSplash() {
@@ -849,18 +871,36 @@
     }
 
     /* 재생/일시정지 토글 */
-    if (playToggle) {
-      playToggle.addEventListener('click', function () {
+    var toggleShowreel = function () {
+      if (showreel.paused) {
+        /* 재생: 라벨을 먼저 바뀌 즉시 반응을 보이고, 실제 재생 여부로 다시 맞춘다 */
+        userPaused = false;
+        syncPlayBtn(false);
+        playShowreel();
         if (showreel.paused) {
-          userPaused = false;
-          playShowreel();
-          if (!showreel.paused) syncPlayBtn(false);
-        } else {
-          userPaused = true;
-          try { showreel.pause(); } catch (e) {}
-          syncPlayBtn(true);
+          window.setTimeout(function () { if (!showreel || showreel.paused) syncPlayBtn(true); }, 450);
         }
+      } else {
+        userPaused = true;
+        try { showreel.pause(); } catch (e) {}
+        syncPlayBtn(true);
+      }
+    };
+
+    if (playToggle) {
+      /* iOS Safari: click 이 유실되는 경우를 대비한 touchend 보완 — 중복 토글 방지 플래그 */
+      var clickSeen = false;
+      playToggle.addEventListener('click', function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        clickSeen = true;
+        toggleShowreel();
       });
+      playToggle.addEventListener('touchend', function () {
+        clickSeen = false;
+        window.setTimeout(function () {
+          if (!clickSeen) { clickSeen = true; toggleShowreel(); }
+        }, 600);
+      }, { passive: true });
       /* 브라우저·OS가 상태를 바꾸는 경우(탭 전환·미디어 세션 등) 버튼 라벨 동기화 */
       showreel.addEventListener('play', function () { if (!userPaused) syncPlayBtn(false); });
       showreel.addEventListener('pause', function () { syncPlayBtn(true); });
