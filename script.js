@@ -684,72 +684,73 @@
     status.classList.toggle('is-error', !!isError);
   }
 
-  if (form) {
-    /* GitHub Pages 같은 정적 호스팅에서는 form POST 엔드포인트가 없다.
-       (Netlify 배포에서는 기존처럼 fetch('/', POST) 로 전송) */
-    var staticPreview = /\.github\.io$/i.test(window.location.hostname);
+  /* FormSubmit AJAX 전송 (JS 없이도 <form action> 직접 POST 로 동작) */
+  var FORM_ENDPOINT = 'https://formsubmit.co/ajax/djseo2707@gmail.com';
 
-    function buildMailto(data) {
-      var lines = [];
-      ['name', 'email', 'phone', 'service', 'message'].forEach(function (k) {
-        var v = data.get(k);
-        if (v) lines.push(k === 'name' ? '이름/회사: ' + v :
-                    k === 'email' ? '이메일: ' + v :
-                    k === 'phone' ? '연락처: ' + v :
-                    k === 'service' ? '서비스: ' + v : '요청 내용:\n' + v);
-      });
-      return 'mailto:djseo2707@gmail.com?subject=' +
-        encodeURIComponent('[프로젝트 문의] ' + (data.get('name') || '')) +
-        '&body=' + encodeURIComponent(lines.join('\n'));
-    }
+  function setStatusLink(prefix, label, href, suffix) {
+    if (!status) return;
+    status.classList.add('is-error');
+    status.textContent = prefix;
+    var a = document.createElement('a');
+    a.href = href;
+    a.textContent = label;
+    a.style.cssText = 'color:var(--accent-2);text-decoration:underline;text-underline-offset:3px;display:inline-block;white-space:nowrap';
+    status.appendChild(a);
+    if (suffix) status.appendChild(document.createTextNode(suffix));
+  }
 
-    function showMailtoStatus(data) {
-      if (!status) return;
-      status.classList.remove('is-error');
-      status.textContent = '미리보기(GitHub Pages) 환경이라 폼 전송이 저장되지 않습니다. ';
-      var a = document.createElement('a');
-      a.href = buildMailto(data);
-      a.textContent = '이 내용으로 메일 보내기';
-      a.style.cssText = 'color:var(--accent-2);text-decoration:underline;text-underline-offset:3px;display:inline-block;white-space:nowrap';
-      status.appendChild(a);
-      status.appendChild(document.createTextNode(' 또는 djseo2707@gmail.com 로 보내주세요.'));
+  if (form && submitBtn) {
+    var submitLabel = submitBtn.querySelector('span');
+    var btnIdle = submitLabel ? submitLabel.textContent : '';
+
+    function setBusy(busy) {
+      submitBtn.disabled = !!busy;
+      submitBtn.setAttribute('aria-busy', busy ? 'true' : 'false');
+      if (submitLabel) submitLabel.textContent = busy ? '전송 중…' : btnIdle;
     }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (submitBtn.disabled) return; /* 중복 클릭 방지 */
+
       if (!form.checkValidity()) {
         form.reportValidity();
         setStatus('필수 항목을 확인해 주세요.', true);
         return;
       }
-      var data = new FormData(form);
 
-      if (staticPreview) {
-        showMailtoStatus(data);
-        return;
-      }
+      var payload = {};
+      new FormData(form).forEach(function (v, k) {
+        if (k === '_honey') return;
+        payload[k] = typeof v === 'string' ? v : v.name;
+      });
+      if (payload.email) payload._replyto = payload.email;
 
-      var body = new URLSearchParams();
-      data.forEach(function (v, k) { body.append(k, v); });
+      setStatus('');
+      setBusy(true);
 
-      submitBtn.disabled = true;
-      setStatus('보내는 중입니다…');
-
-      fetch('/', {
+      fetch(FORM_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
       })
         .then(function (res) {
-          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json().catch(function () { return {}; }).then(function (json) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return json;
+          });
+        })
+        .then(function (json) {
+          if (json && String(json.success) === 'false') throw new Error('rejected');
           form.reset();
           setStatus('문의가 접수되었습니다. 영업일 24시간 안에 회신드리겠습니다.');
+          if (status && status.scrollIntoView) status.scrollIntoView({ block: 'nearest' });
         })
         .catch(function () {
-          setStatus('전송에 실패했습니다. djseo2707@gmail.com 로 보내주시면 바로 확인하겠습니다.', true);
+          setStatusLink('전송에 실패했습니다. 잠시 후 다시 시도하시거나 ', 'djseo2707@gmail.com', 'mailto:djseo2707@gmail.com', ' 로 보내주세요.');
         })
         .finally(function () {
-          submitBtn.disabled = false;
+          setBusy(false);
         });
     });
   }

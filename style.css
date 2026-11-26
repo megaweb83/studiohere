@@ -855,6 +855,7 @@ a.ci-val:hover{color:var(--accent-2)}
 .form-status{font-size:11.5px;color:var(--accent-2);min-height:0}
 .form-status.is-error{color:#FF7A6B}
 .form-status:empty{display:none}
+.contact-form .btn[disabled]{opacity:.62;cursor:progress;pointer-events:none}
 
 /* =========================================================================
    FOOTER
