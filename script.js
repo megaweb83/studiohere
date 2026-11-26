@@ -729,10 +729,16 @@
       setStatus('');
       setBusy(true);
 
+      /* URLSearchParams → application/x-www-form-urlencoded (CORS preflight 없이 전송) */
+      var body = new URLSearchParams();
+      Object.keys(payload).forEach(function (k) {
+        if (payload[k]) body.append(k, payload[k]);
+      });
+
       fetch(FORM_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { 'Accept': 'application/json' },
+        body: body
       })
         .then(function (res) {
           return res.json().catch(function () { return {}; }).then(function (json) {
